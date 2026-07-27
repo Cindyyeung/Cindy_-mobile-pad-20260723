@@ -778,7 +778,7 @@ export default function CheckInWizard({ onClose, onComplete, onClaimQuote, onGoT
                     transition={{ delay: 0.5 }}
                     className="mt-3 bg-brand-ochre/10 border-2 border-brand-ochre/30 rounded-2xl p-4 w-full max-w-sm mx-auto flex flex-col items-center gap-3 shadow-xs"
                   >
-                    <span className="text-brand-ochre text-[14px] font-black tracking-wide">可以領取一張語錄卡！</span>
+                    <span className="text-brand-ochre text-[14px] font-black tracking-wide">🎟️ 可領取實體情緒語錄卡憑證！</span>
                     <button
                       onClick={() => {
                         playClickSound(480, 'sine');
@@ -786,7 +786,7 @@ export default function CheckInWizard({ onClose, onComplete, onClaimQuote, onGoT
                       }}
                       className="py-2.5 px-6 bg-brand-ochre hover:bg-amber-600 text-white rounded-xl text-[14px] font-black transition active:scale-95 cursor-pointer shadow-sm w-full"
                     >
-                      立即領取
+                      領取兌換憑證
                     </button>
                   </motion.div>
                 )}

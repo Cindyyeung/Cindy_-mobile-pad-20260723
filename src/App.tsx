@@ -547,6 +547,8 @@ export default function App() {
                 gardenCycleOffset={gardenCycleOffset}
                 onUpdateGardenCycleOffset={saveGardenCycleOffset}
                 initialMode={gardenViewMode}
+                onGoToHome={() => setActiveTab('home')}
+                onGoToScanner={() => setIsScanning(true)}
                 unlockedCardsCount={unlockedCards.length}
                 unlockedCards={unlockedCards}
                 isIpad={isIpad}

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { PlantState, CheckInRecord } from '../types';
 import { playClickSound, playSuccessChime, speakText } from '../utils/audio';
-import { ArrowLeft, Gift, Copy, Check, Home, Edit3, Download, Share2, Sparkles, RefreshCw, Volume2, BookOpen, Library, CheckCircle2, X } from 'lucide-react';
+import { ArrowLeft, Gift, Copy, Check, Home, Edit3, Download, Share2, Sparkles, RefreshCw, Volume2, BookOpen, Library, CheckCircle2, X, Camera } from 'lucide-react';
 import { ALL_CARDS } from '../cardsData';
 import AnimatedPlant from './AnimatedPlant';
 
@@ -17,6 +17,7 @@ interface GardenViewProps {
   onUpdateGardenCycleOffset: (offset: number) => void;
   initialMode?: 'main' | 'exchange' | 'success';
   onGoToHome?: () => void;
+  onGoToScanner?: () => void;
   unlockedCardsCount?: number;
   unlockedCards?: string[];
   isIpad?: boolean;
@@ -165,6 +166,7 @@ export default function GardenView({
   onUpdateGardenCycleOffset,
   initialMode = 'main',
   onGoToHome,
+  onGoToScanner,
   unlockedCardsCount = 0,
   unlockedCards = [],
   isIpad = false
@@ -308,7 +310,12 @@ export default function GardenView({
         return;
       }
       if (lastClaimedQuoteDate === todayStr) {
-        setShowAlreadyClaimedModal(true);
+        // Show the voucher/pass screen directly so student can present it to teacher at any time
+        const dayHash = todayStr.split('-').reduce((acc, part) => acc + parseInt(part, 10), 0);
+        const qIndex = dayHash % QUOTE_CARDS.length;
+        setTodayQuote(QUOTE_CARDS[qIndex]);
+        setExchangedGift(gift);
+        setMode('success');
         return;
       }
 
@@ -444,86 +451,94 @@ export default function GardenView({
     return (
       <div className="flex-1 flex flex-col justify-between py-1 px-1 h-full overflow-y-auto">
         {isQuoteCard ? (
-          /* EMOTION QUOTE CARD DISPLAY */
-          <div className="flex-1 flex flex-col justify-between space-y-4 py-2">
-            <div className="text-center space-y-1 shrink-0">
-              <div className="inline-flex items-center gap-1 bg-amber-50 text-amber-800 border border-amber-200 px-3 py-1 rounded-full text-xs font-black">
-                <span>🃏</span>
-                <span>今日記錄心情解鎖 · 情緒語錄卡牌</span>
+          /* SIMPLIFIED CLAIM VOUCHER */
+          <div className="flex-1 flex flex-col justify-center items-center py-2 px-1 space-y-4 max-w-[360px] mx-auto w-full my-auto">
+            <motion.div
+              initial={{ scale: 0.92, opacity: 0, y: 10 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              className="w-full bg-white rounded-3xl border-2 border-brand-sand/90 p-5 sm:p-6 shadow-sm text-center space-y-4 relative overflow-hidden"
+            >
+              {/* Decorative top accent */}
+              <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-emerald-400 via-brand-sage to-amber-400" />
+
+              {/* Header */}
+              <div className="space-y-1 pt-1">
+                <h3 className="text-xl sm:text-2xl font-black text-emerald-600 flex items-center justify-center gap-1.5">
+                  <span>✅</span>
+                  <span>兌換成功！</span>
+                </h3>
+                <p className="text-xs font-bold text-gray-400 font-mono">
+                  {new Date().toISOString().split('T')[0]}
+                </p>
+                <p className="text-sm font-black text-gray-800 pt-1">
+                  你已成功兌換「實體語錄卡牌」1 張 🃏
+                </p>
               </div>
-              <h3 className="text-base font-black text-gray-800">每日心靈卡牌</h3>
-            </div>
 
-            {/* THE QUOTE CARD PREVIEW */}
-            <div className="relative shrink-0 py-2 max-w-[360px] mx-auto w-full">
-              <motion.div
-                initial={{ scale: 0.9, opacity: 0, y: 10 }}
-                animate={{ scale: 1, opacity: 1, y: 0 }}
-                className="bg-linear-to-b from-amber-50 via-orange-50 to-rose-50 p-6 rounded-3xl border-4 border-amber-200/80 shadow-lg text-center space-y-5 relative overflow-hidden"
-              >
-                <div className="absolute top-2 right-3 text-3xl opacity-20 pointer-events-none">✨</div>
-                <div className="absolute bottom-2 left-3 text-3xl opacity-20 pointer-events-none">🌱</div>
+              {/* How to claim box */}
+              <div className="bg-amber-50/80 border-2 border-dashed border-amber-300/80 rounded-2xl p-3.5 text-left space-y-1">
+                <p className="text-xs font-black text-amber-900 flex items-center gap-1">
+                  <span>📌</span>
+                  <span>領取方式：</span>
+                </p>
+                <p className="text-xs font-extrabold text-gray-700 pl-5 leading-relaxed">
+                  請向老師出示此畫面，即可領取
+                </p>
+              </div>
 
-                <div className="inline-block px-3 py-1 bg-white/80 rounded-full border border-amber-300/60 text-[11px] font-black text-amber-900 shadow-2xs">
-                  📅 {new Date().toISOString().split('T')[0]} · 每日心靈專屬
+              {/* Divider & Next Step */}
+              <div className="space-y-2 pt-1 border-t border-gray-100">
+                <div className="text-[11px] font-black text-gray-400 tracking-widest uppercase">
+                  ─── 下一步 ───
                 </div>
-
-                <div className="py-4 px-3 bg-white/80 backdrop-blur-xs rounded-2xl border border-amber-200/60 shadow-inner space-y-3 relative group">
-                  <div className="flex items-center justify-between">
-                    <div className="text-2xl text-amber-500 leading-none">“</div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        playClickSound(550, 'sine');
-                        const textToRead = `每日情緒語錄：${todayQuote || "每一朵花都有自己盛開的季節，不慌不忙，慢慢長大吧！"}`;
-                        speakText(textToRead);
-                      }}
-                      className="flex items-center gap-1 text-[11px] font-black text-amber-800 bg-amber-100 hover:bg-amber-200 px-2.5 py-1 rounded-full border border-amber-300/80 transition cursor-pointer active:scale-95 shadow-2xs"
-                      title="粵語朗讀語錄"
-                    >
-                      <Volume2 className="w-3.5 h-3.5 text-amber-700" />
-                      <span>粵語朗讀</span>
-                    </button>
-                  </div>
-                  <p className="text-sm sm:text-base font-black text-gray-800 leading-relaxed font-sans px-1 text-left">
-                    {todayQuote || "每一朵花都有自己盛開的季節，不慌不忙，慢慢長大吧！🌿"}
+                <div className="space-y-0.5">
+                  <p className="text-xs font-black text-gray-800 flex items-center justify-center gap-1">
+                    <span>📷</span>
+                    <span>掃描語錄卡</span>
                   </p>
-                  <div className="text-2xl text-amber-500 leading-none text-right">”</div>
+                  <p className="text-[11px] font-bold text-gray-500">
+                    拿到實體卡後，掃描卡上文字入圖鑑 ✨
+                  </p>
                 </div>
+              </div>
 
-                <div className="bg-amber-100/60 p-2.5 rounded-xl border border-amber-200/50 text-[11px] font-extrabold text-amber-900 leading-snug">
-                  🌱 小綠記錄：感謝你今天認真面對自己的心情！持之以恆記錄，花園小苗會越長越茁壯喔！
-                </div>
-              </motion.div>
-            </div>
+              {/* Action Buttons */}
+              <div className="grid grid-cols-2 gap-2.5 pt-2">
+                <button
+                  onClick={() => {
+                    playClickSound(580, 'sine');
+                    if (onGoToScanner) {
+                      onGoToScanner();
+                    } else if (onGoToHome) {
+                      onGoToHome();
+                    } else {
+                      handleBackToMain();
+                    }
+                  }}
+                  className="py-2.5 px-3 bg-brand-sage hover:bg-brand-moss text-white rounded-xl text-xs sm:text-sm font-black transition cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 shadow-2xs border-0"
+                  style={{ minHeight: '42px' }}
+                >
+                  <Camera className="w-4 h-4" />
+                  <span>📷 去掃描</span>
+                </button>
 
-            {/* Actions */}
-            <div className="grid grid-cols-2 gap-3 shrink-0 pt-3 border-t border-brand-sand/40 max-w-[360px] mx-auto w-full">
-              <button
-                onClick={() => {
-                  playClickSound(580, 'sine');
-                  try {
-                    navigator.clipboard.writeText(`🃏 【心晴日記 · 每日情緒語錄卡牌】\n「${todayQuote || "每一朵花都有自己盛開的季節，不慌不忙，慢慢長大吧！🌿"}」\n🌱 陪伴你好好記錄心情，慢慢長大！`);
-                    setCopied(true);
-                    setTimeout(() => setCopied(false), 2000);
-                  } catch(e) {}
-                }}
-                className="py-2.5 bg-brand-sage hover:bg-brand-moss text-white rounded-xl text-xs font-black transition cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 shadow-2xs border-0"
-                style={{ minHeight: '40px' }}
-              >
-                <Copy className="w-4 h-4" />
-                <span>{copied ? '已複製語錄' : '複製語錄'}</span>
-              </button>
-
-              <button
-                onClick={handleBackToMain}
-                className="py-2.5 bg-[#f9f7f2] hover:bg-brand-sand text-brand-moss border border-brand-sand/80 rounded-xl text-xs font-black transition cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 shadow-2xs"
-                style={{ minHeight: '40px' }}
-              >
-                <Home className="w-4 h-4" />
-                <span>回到花園</span>
-              </button>
-            </div>
+                <button
+                  onClick={() => {
+                    playClickSound(520, 'sine');
+                    if (onGoToHome) {
+                      onGoToHome();
+                    } else {
+                      handleBackToMain();
+                    }
+                  }}
+                  className="py-2.5 px-3 bg-[#f9f7f2] hover:bg-brand-sand text-brand-moss border border-brand-sand/80 rounded-xl text-xs sm:text-sm font-black transition cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 shadow-2xs"
+                  style={{ minHeight: '42px' }}
+                >
+                  <Home className="w-4 h-4" />
+                  <span>🏠 首頁</span>
+                </button>
+              </div>
+            </motion.div>
           </div>
         ) : isPostcard ? (
           /* ELECTRONIC POSTCARD INTERACTIVE PAGE */
@@ -1057,21 +1072,21 @@ export default function GardenView({
               const isQuoteClaimedToday = lastClaimedQuoteDate === todayStr;
 
               if (gift.id === 'gift-0') {
-                let statusDesc = '⭐ 每日記錄心情即可免費領取';
-                let buttonLabel = '領取';
+                let statusDesc = '⭐ 每日記錄心情即可免費領取憑證';
+                let buttonLabel = '領取憑證';
                 let btnStyle = 'bg-brand-sage text-white hover:bg-brand-moss active:scale-95 shadow-xs border-0';
 
                 if (!hasCheckedInToday) {
-                  statusDesc = '🔒 今日尚未記錄心情（請先記錄心情）';
+                  statusDesc = '🔒 今日尚未記錄心情（記錄後可領實體卡憑證）';
                   buttonLabel = '未記錄';
                   btnStyle = 'bg-amber-100/90 text-amber-800 border border-amber-300 hover:bg-amber-200 active:scale-95';
                 } else if (isQuoteClaimedToday) {
-                  statusDesc = '✅ 今日已領取（明天記錄心情可再領）';
-                  buttonLabel = '今日已領';
-                  btnStyle = 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100/50 cursor-pointer';
+                  statusDesc = '✅ 今日已領取憑證（點擊可隨時出示查看與掃描）';
+                  buttonLabel = '查看憑證';
+                  btnStyle = 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100/50 cursor-pointer font-extrabold';
                 } else {
-                  statusDesc = '✨ 今日已記錄心情！點擊即可免費領取';
-                  buttonLabel = '免費領取';
+                  statusDesc = '✨ 今日已記錄心情！點擊領取實體卡兌換憑證';
+                  buttonLabel = '領取憑證';
                   btnStyle = 'bg-brand-ochre text-white hover:bg-amber-600 active:scale-95 shadow-xs font-black border-0 animate-pulse';
                 }
 
